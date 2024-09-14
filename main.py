@@ -20,7 +20,7 @@ from exponent_server_sdk import (
 
 dotenv.load_dotenv(".env")
 
-CONNECTION_STRING = os.eviron["connection_string"]
+CONNECTION_STRING = os.eviron["POSTGRES_URL"]
 
 expo_session = requests.Session()
 expo_session.headers.update(
