@@ -20,7 +20,7 @@ from exponent_server_sdk import (
 
 dotenv.load_dotenv(".env")
 
-CONNECTION_STRING = os.environ["POSTGRES_URL"]
+CONNECTION_STRING = os.environ["POSTGRES_URL"] if os.environ["POSTGRES_URL"].startswith("postgresql://") else "postgresql" + os.environ["POSTGRES_URL"].removeprefix("postgres")
 
 expo_session = requests.Session()
 expo_session.headers.update(
