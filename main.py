@@ -43,7 +43,7 @@ class Notifications(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
 
     def __repr__(self) -> str:
-        return f"Notification(notification_token={self.notification_token}, region={self.region}, id={self.id})"
+        return f"Notification(notification_token={self.notification_token}, region={self.region}, id={self.id});"
 
 # Create database engine
 engine = create_engine(CONNECTION_STRING, echo=True)
