@@ -1,12 +1,11 @@
 import base64
 import json
 import os
-from fastapi import Body, FastAPI, Form
+from fastapi import FastAPI, Form
 from enum import StrEnum
-from sqlalchemy import create_engine
-from pydantic import BaseModel
-from sqlalchemy import String
+from sqlalchemy import create_engine, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
+from pydantic import BaseModel
 import dotenv
 import firebase_admin
 from firebase_admin import messaging, credentials
@@ -20,6 +19,8 @@ firebase_admin.initialize_app(cred)
 
 CONNECTION_STRING = os.environ["POSTGRES_URL"] if os.environ["POSTGRES_URL"].startswith("postgresql://") else "postgresql" + os.environ["POSTGRES_URL"].removeprefix("postgres")
 CONNECTION_STRING = os.environ["POSTGRES_URL"] if os.environ["POSTGRES_URL"].startswith("sqlite://") else CONNECTION_STRING
+
+
 class Base(DeclarativeBase):
     pass
 
@@ -38,7 +39,7 @@ class RegionPayload(BaseModel):
 
 class Notifications(Base):
     __tablename__ = "notifications"
-    notification_token: Mapped[str] = mapped_column(String)
+    notification_token: Mapped[str] = mapped_column(String, primary_key=True)
     region: Mapped[Region] = mapped_column(String)
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
 
@@ -63,7 +64,7 @@ def register_notifications(registration: RegistrationTicket):
         return {"status": "ok"}
 
 @app.post("/notify")
-def notify(region: Region = Form(...)):
+def notify(region: Region = Form(...)) -> dict[str, str|int]:
     print(region)
     success = 0
     fail = 0
@@ -71,14 +72,12 @@ def notify(region: Region = Form(...)):
         notifications = session.query(Notifications).filter(Notifications.region == region).all()
         for notification in notifications:
             try:
-                # Send message via FCM
+                # Create message object with token
                 message = messaging.Message(
-                    notification=messaging.Notification(
-                        title="⚠️ It's time to BeReal! ⚠️",
-                        body="You have two minutes to post a ReBeal!",
-                    ),
-                    token=notification.notification_token
+                    data={"type": "moment"},
+                    token=notification.notification_token  # Include the target token
                 )
+                # Send message via FCM
                 response = messaging.send(message)
                 print(f"Successfully sent message: {response}")
                 success += 1
